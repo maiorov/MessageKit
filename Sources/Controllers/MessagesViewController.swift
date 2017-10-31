@@ -275,7 +275,7 @@ fileprivate extension MessagesViewController {
     }
 
     @objc
-    func handleKeyboardDidChangeState(_ notification: Notification) {
+    open func handleKeyboardDidChangeState(_ notification: Notification) {
 
         guard let keyboardEndFrame = notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? CGRect else { return }
 
