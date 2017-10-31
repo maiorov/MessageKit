@@ -255,20 +255,20 @@ extension MessagesViewController: UICollectionViewDataSource {
 
 // MARK: - Keyboard Handling
 
-fileprivate extension MessagesViewController {
+extension MessagesViewController {
 
-    func addKeyboardObservers() {
+    fileprivate func addKeyboardObservers() {
         NotificationCenter.default.addObserver(self, selector: #selector(handleKeyboardDidChangeState), name: .UIKeyboardWillChangeFrame, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleTextViewDidBeginEditing), name: .UITextViewTextDidBeginEditing, object: messageInputBar.inputTextView)
     }
 
-    func removeKeyboardObservers() {
+    fileprivate func removeKeyboardObservers() {
         NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillChangeFrame, object: nil)
         NotificationCenter.default.removeObserver(self, name: .UITextViewTextDidBeginEditing, object: messageInputBar.inputTextView)
     }
 
     @objc
-    func handleTextViewDidBeginEditing(_ notification: Notification) {
+    fileprivate func handleTextViewDidBeginEditing(_ notification: Notification) {
         if scrollsToBottomOnKeybordBeginsEditing {
             messagesCollectionView.scrollToBottom(animated: true)
         }
