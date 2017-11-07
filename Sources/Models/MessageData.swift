@@ -41,7 +41,7 @@ public enum MessageData {
     case attributedText(NSAttributedString)
 
     /// A photo message.
-    case photo(UIImage)
+    case photo(UIImage, quantity: Int)
 
     /// A video message.
     case video(file: URL, thumbnail: UIImage)
@@ -60,6 +60,6 @@ public enum MessageData {
 //    
 //    case custom(Any)
 //    
-//    case placeholder
+    case placeholder
 
 }

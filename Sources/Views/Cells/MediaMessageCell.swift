@@ -34,6 +34,24 @@ open class MediaMessageCell: MessageCollectionViewCell<UIImageView> {
         playButtonView.frame.size = CGSize(width: 35, height: 35)
         return playButtonView
     }()
+    
+    open lazy var activityIndicatorView: UIActivityIndicatorView = {
+        let activityIndicatorView = UIActivityIndicatorView.init(activityIndicatorStyle: UIActivityIndicatorViewStyle.gray)
+        activityIndicatorView.hidesWhenStopped = true
+        return activityIndicatorView
+    }()
+    
+    open lazy var quantityLabel: UILabel = {
+        let quantityLabel = UILabel()
+        quantityLabel.textAlignment = .center
+        quantityLabel.textColor = UIColor.white
+        quantityLabel.font = UIFont.italicSystemFont(ofSize: 28)
+        quantityLabel.backgroundColor = UIColor(white: 0.6, alpha: 0.4)
+        quantityLabel.layer.cornerRadius = 5
+        quantityLabel.layer.borderWidth = 1
+        quantityLabel.layer.borderColor = UIColor(white: 0.7, alpha: 1.0).cgColor
+        return quantityLabel
+    }()
 
     // MARK: - Methods
 
@@ -45,24 +63,48 @@ open class MediaMessageCell: MessageCollectionViewCell<UIImageView> {
         let width = playButtonView.widthAnchor.constraint(equalToConstant: playButtonView.bounds.width)
         let height = playButtonView.heightAnchor.constraint(equalToConstant: playButtonView.bounds.height)
 
-        NSLayoutConstraint.activate([centerX, centerY, width, height])
+        activityIndicatorView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let activityIndicatorCenterX = activityIndicatorView.centerXAnchor.constraint(equalTo: messageContainerView.centerXAnchor)
+        let activityIndicatorCenterY = activityIndicatorView.centerYAnchor.constraint(equalTo: messageContainerView.centerYAnchor)
+        
+        quantityLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        let quantityLabelCenterX = quantityLabel.centerXAnchor.constraint(equalTo: messageContainerView.centerXAnchor)
+        let quantityLabelCenterY = quantityLabel.centerYAnchor.constraint(equalTo: messageContainerView.centerYAnchor)
+        let quantityLabelWidth = quantityLabel.widthAnchor.constraint(equalToConstant: 100)
+        let quantityLabelHeight = quantityLabel.heightAnchor.constraint(equalToConstant: 100)
+        
+        NSLayoutConstraint.activate([centerX, centerY, width, height, activityIndicatorCenterX, activityIndicatorCenterY, quantityLabelCenterX, quantityLabelCenterY, quantityLabelWidth, quantityLabelHeight])
+
     }
 
     override func setupSubviews() {
         super.setupSubviews()
         messageContentView.addSubview(playButtonView)
+        messageContentView.addSubview(activityIndicatorView)
+        messageContentView.addSubview(quantityLabel)
         setupConstraints()
     }
 
     open override func configure(with message: MessageType, at indexPath: IndexPath, and messagesCollectionView: MessagesCollectionView) {
         super.configure(with: message, at: indexPath, and: messagesCollectionView)
         switch message.data {
-        case .photo(let image):
+        case .photo(let image, let quantity):
             messageContentView.image = image
             playButtonView.isHidden = true
+            quantityLabel.isHidden = !(quantity > 0)
+            quantityLabel.text = quantity > 0 ? "+\(quantity)" : ""
+            //quantityLabel.textAlignment
+            activityIndicatorView.stopAnimating()
         case .video(_, let image):
             messageContentView.image = image
             playButtonView.isHidden = false
+            quantityLabel.isHidden = false
+        case .placeholder:
+            playButtonView.isHidden = true
+            quantityLabel.isHidden = true
+            activityIndicatorView.startAnimating()
         default:
             break
         }

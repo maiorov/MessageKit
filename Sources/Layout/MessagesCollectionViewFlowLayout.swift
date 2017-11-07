@@ -478,7 +478,7 @@ private extension MessagesCollectionViewFlowLayout {
             messageContainerSize = labelSize(for: text, considering: maxWidth, and: emojiLabelFont)
             messageContainerSize.width += attributes.messageLabelHorizontalInsets
             messageContainerSize.height += attributes.messageLabelVerticalInsets
-        case .photo, .video:
+        case .photo, .video, .placeholder:
             guard let layoutDelegate = messagesLayoutDelegate as? MediaMessageLayoutDelegate else {
                 fatalError("Layout object attempting to size media message type and MediaMessageLayoutDelegate is not set.")
             }
