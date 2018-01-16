@@ -40,6 +40,12 @@ open class TextMessageCell: MessageCollectionViewCell<MessageLabel> {
             messageTapGesture?.delegate = messageContentView
         }
     }
+    
+    override var messageLongPressGesture: UILongPressGestureRecognizer? {
+        didSet {
+            messageLongPressGesture?.delegate = messageContentView
+        }
+    }
 
     // MARK: - Methods
 

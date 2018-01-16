@@ -37,6 +37,8 @@ public protocol MessageCellDelegate: class, MessageLabelDelegate {
     /// method `messageForItem(at:indexPath:messagesCollectionView)`.
     func didTapMessage<T>(in cell: MessageCollectionViewCell<T>)
 
+    func didLongPressMessage<T>(in cell: MessageCollectionViewCell<T>)
+    
     /// Triggered when a touch occurs in the `AvatarView`.
     ///
     /// - Parameters:
@@ -46,7 +48,7 @@ public protocol MessageCellDelegate: class, MessageLabelDelegate {
     /// `indexPath(for: cell)` method. Then using the returned `IndexPath` with the `MessagesDataSource`
     /// method `messageForItem(at:indexPath:messagesCollectionView)`.
     func didTapAvatar<T>(in cell: MessageCollectionViewCell<T>)
-
+    
     /// Triggered when a touch occurs in the cellBottomLabel.
     ///
     /// - Parameters:

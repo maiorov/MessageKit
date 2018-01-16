@@ -60,6 +60,6 @@ public enum MessageData {
 //    
 //    case custom(Any)
 //    
-    case placeholder
+    case placeholder(activityAnimating: Bool)
 
 }

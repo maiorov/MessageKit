@@ -38,7 +38,14 @@ open class MediaMessageCell: MessageCollectionViewCell<UIImageView> {
     open lazy var activityIndicatorView: UIActivityIndicatorView = {
         let activityIndicatorView = UIActivityIndicatorView.init(activityIndicatorStyle: UIActivityIndicatorViewStyle.gray)
         activityIndicatorView.hidesWhenStopped = true
+        activityIndicatorView.isHidden = true
         return activityIndicatorView
+    }()
+    
+    open lazy var progressView: UIProgressView = {
+        let progressView = UIProgressView() // UIActivityIndicatorView.init(activityIndicatorStyle: UIActivityIndicatorViewStyle.gray)
+        progressView.trackTintColor = UIColor.clear
+        return progressView
     }()
     
     open lazy var quantityLabel: UILabel = {
@@ -52,6 +59,18 @@ open class MediaMessageCell: MessageCollectionViewCell<UIImageView> {
         quantityLabel.layer.borderColor = UIColor(white: 0.7, alpha: 1.0).cgColor
         return quantityLabel
     }()
+    
+    open lazy var mediaStatusLabel: UILabel = {
+        let mediaStatusLabel = UILabel()
+        mediaStatusLabel.textAlignment = .center
+        mediaStatusLabel.textColor = UIColor.darkGray
+        mediaStatusLabel.font = UIFont.systemFont(ofSize: 14)
+        //mediaStatusLabel.backgroundColor = UIColor(white: 0.6, alpha: 0.4)
+        //mediaStatusLabel.layer.cornerRadius = 5
+        //mediaStatusLabel.layer.borderWidth = 1
+        //mediaStatusLabel.layer.borderColor = UIColor(white: 0.7, alpha: 1.0).cgColor
+        return mediaStatusLabel
+    }()
 
     // MARK: - Methods
 
@@ -62,9 +81,9 @@ open class MediaMessageCell: MessageCollectionViewCell<UIImageView> {
         let centerY = playButtonView.centerYAnchor.constraint(equalTo: messageContainerView.centerYAnchor)
         let width = playButtonView.widthAnchor.constraint(equalToConstant: playButtonView.bounds.width)
         let height = playButtonView.heightAnchor.constraint(equalToConstant: playButtonView.bounds.height)
-
-        activityIndicatorView.translatesAutoresizingMaskIntoConstraints = false
         
+        activityIndicatorView.translatesAutoresizingMaskIntoConstraints = false
+
         let activityIndicatorCenterX = activityIndicatorView.centerXAnchor.constraint(equalTo: messageContainerView.centerXAnchor)
         let activityIndicatorCenterY = activityIndicatorView.centerYAnchor.constraint(equalTo: messageContainerView.centerYAnchor)
         
@@ -75,8 +94,27 @@ open class MediaMessageCell: MessageCollectionViewCell<UIImageView> {
         let quantityLabelWidth = quantityLabel.widthAnchor.constraint(equalToConstant: 100)
         let quantityLabelHeight = quantityLabel.heightAnchor.constraint(equalToConstant: 100)
         
-        NSLayoutConstraint.activate([centerX, centerY, width, height, activityIndicatorCenterX, activityIndicatorCenterY, quantityLabelCenterX, quantityLabelCenterY, quantityLabelWidth, quantityLabelHeight])
-
+        progressView.translatesAutoresizingMaskIntoConstraints = false
+        let progressViewCenterX = progressView.centerXAnchor.constraint(equalTo: messageContainerView.centerXAnchor)
+        let progressViewCenterY = progressView.centerYAnchor.constraint(equalTo: messageContainerView.centerYAnchor)
+        progressViewCenterY.constant = 20
+        let progressViewWidth = progressView.widthAnchor.constraint(equalTo: messageContainerView.widthAnchor)
+        progressViewWidth.constant = -50
+        let progressViewHeight = progressView.heightAnchor.constraint(equalToConstant: 2)
+        
+        mediaStatusLabel.translatesAutoresizingMaskIntoConstraints = false
+        let mediaStatusLabelCenterX = mediaStatusLabel.centerXAnchor.constraint(equalTo: messageContainerView.centerXAnchor)
+        let mediaStatusLabelCenterY = mediaStatusLabel.centerYAnchor.constraint(equalTo: messageContainerView.centerYAnchor)
+        mediaStatusLabelCenterY.constant = -30
+        let mediaStatusLabelWidth = mediaStatusLabel.widthAnchor.constraint(equalTo: messageContainerView.widthAnchor)
+        mediaStatusLabelWidth.constant = -50
+        let mediaStatusLabelHeight = mediaStatusLabel.heightAnchor.constraint(equalToConstant: 100)
+        
+        NSLayoutConstraint.activate([centerX, centerY, width, height,
+                                     activityIndicatorCenterX, activityIndicatorCenterY,
+                                     quantityLabelCenterX, quantityLabelCenterY, quantityLabelWidth, quantityLabelHeight,
+                                     progressViewCenterX, progressViewCenterY, progressViewWidth, progressViewHeight,
+                                     mediaStatusLabelCenterX, mediaStatusLabelCenterY, mediaStatusLabelWidth, mediaStatusLabelHeight])
     }
 
     override func setupSubviews() {
@@ -84,6 +122,8 @@ open class MediaMessageCell: MessageCollectionViewCell<UIImageView> {
         messageContentView.addSubview(playButtonView)
         messageContentView.addSubview(activityIndicatorView)
         messageContentView.addSubview(quantityLabel)
+        messageContentView.addSubview(progressView)
+        messageContentView.addSubview(mediaStatusLabel)
         setupConstraints()
     }
 
@@ -93,21 +133,39 @@ open class MediaMessageCell: MessageCollectionViewCell<UIImageView> {
         case .photo(let image, let quantity):
             messageContentView.image = image
             playButtonView.isHidden = true
-            quantityLabel.isHidden = !(quantity > 0)
-            quantityLabel.text = quantity > 0 ? "+\(quantity)" : ""
-            //quantityLabel.textAlignment
+            quantityLabel.isHidden = !(quantity > 1)
+            quantityLabel.text = quantity > 1 ? "\(quantity)" : ""
+            activityIndicatorView.isHidden = true
             activityIndicatorView.stopAnimating()
+            progressView.isHidden = true
+            mediaStatusLabel.isHidden = true
         case .video(_, let image):
             messageContentView.image = image
             playButtonView.isHidden = false
             quantityLabel.isHidden = false
-        case .placeholder:
+            activityIndicatorView.isHidden = true
+            activityIndicatorView.stopAnimating()
+            progressView.isHidden = true
+            mediaStatusLabel.isHidden = true
+        case .placeholder(let activityAnimating):
+            messageContentView.image = nil
             playButtonView.isHidden = true
             quantityLabel.isHidden = true
-            activityIndicatorView.startAnimating()
+            mediaStatusLabel.isHidden = false
+            if activityAnimating {
+                activityIndicatorView.startAnimating()
+                activityIndicatorView.isHidden = false
+                progressView.isHidden = true
+                mediaStatusLabel.text = "Расшифровка"
+            } else {
+                progressView.isHidden = false
+                progressView.progress = 0.05
+                activityIndicatorView.stopAnimating()
+                activityIndicatorView.isHidden = true
+                mediaStatusLabel.text = "Загрузка"
+            }
         default:
             break
         }
     }
-
 }
