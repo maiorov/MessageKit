@@ -96,7 +96,7 @@ extension MessagesViewController {
     /// for the MessagesCollectionView.
     ///
     /// - Returns: The safeAreaInsets.bottom if its an iPhoneX, else 0
-    private var iPhoneXBottomInset: CGFloat {
+    open var iPhoneXBottomInset: CGFloat {
         if #available(iOS 11.0, *) {
             guard UIScreen.main.nativeBounds.height == 2436 else { return 0 }
             return view.safeAreaInsets.bottom

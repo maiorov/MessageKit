@@ -24,7 +24,7 @@
 
 import UIKit
 
-open class TextMessageCell: MessageCollectionViewCell {
+open class TextMessageCell: MessageCollectionViewCell<MessageCollectionViewCell<UIView>> {
 
     open override class func reuseIdentifier() -> String { return "messagekit.cell.text" }
 
@@ -36,7 +36,21 @@ open class TextMessageCell: MessageCollectionViewCell {
         }
     }
 
+
     open var messageLabel = MessageLabel()
+
+    override var messageTapGesture: UITapGestureRecognizer? {
+        didSet {
+            messageTapGesture?.delegate = messageContentView as! UIGestureRecognizerDelegate
+        }
+    }
+    
+    override var messageLongPressGesture: UILongPressGestureRecognizer? {
+        didSet {
+            messageLongPressGesture?.delegate = messageContentView as! UIGestureRecognizerDelegate
+        }
+    }
+
 
     // MARK: - Methods
 

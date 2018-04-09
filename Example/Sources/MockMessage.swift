@@ -49,11 +49,11 @@ struct MockMessage: MessageType {
 	}
 
     init(image: UIImage, sender: Sender, messageId: String, date: Date) {
-        self.init(data: .photo(image), sender: sender, messageId: messageId, date: date)
+        self.init(data: .photo(image, quantity: 1), sender: sender, messageId: messageId, date: date)
     }
 
     init(thumbnail: UIImage, sender: Sender, messageId: String, date: Date) {
-        let url = URL(fileURLWithPath: "")
+        let url = URL(fileURLWithPath: "https://video.twimg.com/amplify_video/925286111378845696/pl/l5nrLvZbslPSHIxD.m3u8")
         self.init(data: .video(file: url, thumbnail: thumbnail), sender: sender, messageId: messageId, date: date)
     }
 

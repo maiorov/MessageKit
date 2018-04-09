@@ -140,22 +140,176 @@ open class MessagesViewController: UIViewController {
     private func setupConstraints() {
         messagesCollectionView.translatesAutoresizingMaskIntoConstraints = false
         
-        let top = messagesCollectionView.topAnchor.constraint(equalTo: view.topAnchor, constant: topLayoutGuide.length)
         let bottom = messagesCollectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         if #available(iOS 11.0, *) {
+            let top = messagesCollectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: topLayoutGuide.length)
             let leading = messagesCollectionView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor)
             let trailing = messagesCollectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor)
             NSLayoutConstraint.activate([top, bottom, trailing, leading])
         } else {
+            let top = messagesCollectionView.topAnchor.constraint(equalTo: view.topAnchor, constant: 64)
             let leading = messagesCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor)
             let trailing = messagesCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
             NSLayoutConstraint.activate([top, bottom, trailing, leading])
         }
     }
+
     
     private func addObservers() {
         NotificationCenter.default.addObserver(
             self, selector: #selector(clearMemoryCache), name: .UIApplicationDidReceiveMemoryWarning, object: nil)
+    }
+}
+
+// MARK: - UICollectionViewDelegate & UICollectionViewDelegateFlowLayout Conformance
+
+extension MessagesViewController: UICollectionViewDelegateFlowLayout {
+
+    open func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        guard let messagesFlowLayout = collectionViewLayout as? MessagesCollectionViewFlowLayout else { return .zero }
+        return messagesFlowLayout.sizeForItem(at: indexPath)
+    }
+
+}
+
+// MARK: - UICollectionViewDataSource Conformance
+
+extension MessagesViewController: UICollectionViewDataSource {
+
+    open func numberOfSections(in collectionView: UICollectionView) -> Int {
+        guard let collectionView = collectionView as? MessagesCollectionView else { return 0 }
+
+        // Each message is its own section
+        return collectionView.messagesDataSource?.numberOfMessages(in: collectionView) ?? 0
+    }
+
+    open func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        guard let collectionView = collectionView as? MessagesCollectionView else { return 0 }
+
+        let messageCount = collectionView.messagesDataSource?.numberOfMessages(in: collectionView) ?? 0
+        // There will only ever be 1 message per section
+        return messageCount > 0 ? 1 : 0
+
+    }
+
+    open func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+
+        guard let messagesCollectionView = collectionView as? MessagesCollectionView else {
+            fatalError("Managed collectionView: \(collectionView.debugDescription) is not a MessagesCollectionView.")
+        }
+
+        guard let messagesDataSource = messagesCollectionView.messagesDataSource else {
+            fatalError("MessagesDataSource has not been set.")
+        }
+
+        let message = messagesDataSource.messageForItem(at: indexPath, in: messagesCollectionView)
+
+        switch message.data {
+        case .text, .attributedText, .emoji:
+            let cell = messagesCollectionView.dequeueReusableCell(TextMessageCell.self, for: indexPath)
+            cell.configure(with: message, at: indexPath, and: messagesCollectionView)
+            return cell
+        case .photo, .video, .placeholder:
+    	    let cell = messagesCollectionView.dequeueReusableCell(MediaMessageCell.self, for: indexPath)
+            cell.configure(with: message, at: indexPath, and: messagesCollectionView)
+            return cell
+        case .location:
+    	    let cell = messagesCollectionView.dequeueReusableCell(LocationMessageCell.self, for: indexPath)
+            cell.configure(with: message, at: indexPath, and: messagesCollectionView)
+            return cell
+        }
+
+    }
+
+    open func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+
+        guard let messagesCollectionView = collectionView as? MessagesCollectionView else {
+            fatalError("Managed collectionView: \(collectionView.debugDescription) is not a MessagesCollectionView.")
+        }
+
+        guard let dataSource = messagesCollectionView.messagesDataSource else {
+            fatalError("MessagesDataSource has not been set.")
+        }
+
+        guard let displayDelegate = messagesCollectionView.messagesDisplayDelegate else {
+            fatalError("MessagesDisplayDelegate has not been set.")
+        }
+
+        let message = dataSource.messageForItem(at: indexPath, in: messagesCollectionView)
+
+        switch kind {
+        case UICollectionElementKindSectionHeader:
+            return displayDelegate.messageHeaderView(for: message, at: indexPath, in: messagesCollectionView)
+        case UICollectionElementKindSectionFooter:
+            return displayDelegate.messageFooterView(for: message, at: indexPath, in: messagesCollectionView)
+        default:
+            fatalError("Unrecognized element of kind: \(kind)")
+        }
+
+    }
+
+    open func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
+        guard let messagesCollectionView = collectionView as? MessagesCollectionView else { return .zero }
+        guard let messagesDataSource = messagesCollectionView.messagesDataSource else { return .zero }
+        guard let messagesLayoutDelegate = messagesCollectionView.messagesLayoutDelegate else { return .zero }
+        // Could pose a problem if subclass behaviors allows more than one item per section
+        let indexPath = IndexPath(item: 0, section: section)
+        let message = messagesDataSource.messageForItem(at: indexPath, in: messagesCollectionView)
+        return messagesLayoutDelegate.headerViewSize(for: message, at: indexPath, in: messagesCollectionView)
+    }
+
+    open func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForFooterInSection section: Int) -> CGSize {
+        guard let messagesCollectionView = collectionView as? MessagesCollectionView else { return .zero }
+        guard let messagesDataSource = messagesCollectionView.messagesDataSource else { return .zero }
+        guard let messagesLayoutDelegate = messagesCollectionView.messagesLayoutDelegate else { return .zero }
+        // Could pose a problem if subclass behaviors allows more than one item per section
+        let indexPath = IndexPath(item: 0, section: section)
+        let message = messagesDataSource.messageForItem(at: indexPath, in: messagesCollectionView)
+        return messagesLayoutDelegate.footerViewSize(for: message, at: indexPath, in: messagesCollectionView)
+    }
+
+}
+
+// MARK: - Keyboard Handling
+
+extension MessagesViewController {
+
+    fileprivate func addKeyboardObservers() {
+        NotificationCenter.default.addObserver(self, selector: #selector(handleKeyboardDidChangeState), name: .UIKeyboardWillChangeFrame, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleTextViewDidBeginEditing), name: .UITextViewTextDidBeginEditing, object: messageInputBar.inputTextView)
+    }
+
+    fileprivate func removeKeyboardObservers() {
+        NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillChangeFrame, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .UITextViewTextDidBeginEditing, object: messageInputBar.inputTextView)
+    }
+
+    @objc
+    fileprivate func handleTextViewDidBeginEditing(_ notification: Notification) {
+        if scrollsToBottomOnKeybordBeginsEditing {
+            messagesCollectionView.scrollToBottom(animated: true)
+        }
+    }
+
+    @objc
+    open func handleKeyboardDidChangeState(_ notification: Notification) {
+
+        guard let keyboardEndFrame = notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? CGRect else { return }
+
+        if (keyboardEndFrame.origin.y + keyboardEndFrame.size.height) > UIScreen.main.bounds.height {
+            // Hardware keyboard is found
+            let bottomInset = view.frame.size.height - keyboardEndFrame.origin.y - iPhoneXBottomInset
+            messagesCollectionView.contentInset.bottom = bottomInset
+            messagesCollectionView.scrollIndicatorInsets.bottom = bottomInset
+
+        } else {
+            //Software keyboard is found
+            let bottomInset = keyboardEndFrame.height > keyboardOffsetFrame.height ? (keyboardEndFrame.height - iPhoneXBottomInset) : keyboardOffsetFrame.height
+            messagesCollectionView.contentInset.bottom = bottomInset
+            messagesCollectionView.scrollIndicatorInsets.bottom = bottomInset
+        }
+        
+
     }
     
     private func removeObservers() {
@@ -166,3 +320,5 @@ open class MessagesViewController: UIViewController {
         MessageStyle.bubbleImageCache.removeAllObjects()
     }
 }
+    
+

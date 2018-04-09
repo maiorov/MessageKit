@@ -24,7 +24,7 @@
 
 import UIKit
 
-extension MessagesViewController: UICollectionViewDataSource {
+extension MessagesViewController {
 
     open func numberOfSections(in collectionView: UICollectionView) -> Int {
         guard let collectionView = collectionView as? MessagesCollectionView else {
@@ -68,6 +68,8 @@ extension MessagesViewController: UICollectionViewDataSource {
             let cell = messagesCollectionView.dequeueReusableCell(LocationMessageCell.self, for: indexPath)
             cell.configure(with: message, at: indexPath, and: messagesCollectionView)
             return cell
+        case .placeholder(let activityAnimating):
+            <#code#>
         }
     }
 
